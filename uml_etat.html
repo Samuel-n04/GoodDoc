@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Diagramme d'État — RendezVous</title>
+<style>
+  body { background: #f8f9fa; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+  h1 { text-align:center; color:#2c3e50; margin-bottom:4px; }
+  h3 { text-align:center; color:#64748b; margin-top:0; font-weight:normal; }
+</style>
+</head>
+<body>
+<h1>Diagramme d'État</h1>
+<h3>Objet : RendezVous</h3>
+<svg viewBox="0 0 900 700" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <defs>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <!-- Initial state -->
+  <circle cx="450" cy="50" r="14" fill="#334155"/>
+  <line x1="450" y1="64" x2="450" y2="105" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="460" y="90" font-size="11" fill="#64748b" font-family="Segoe UI">création</text>
+
+  <!-- EN_ATTENTE -->
+  <rect x="310" y="108" width="280" height="60" rx="30" fill="#fef9c3" stroke="#ca8a04" stroke-width="2.5"/>
+  <text x="450" y="133" text-anchor="middle" font-size="14" font-weight="bold" fill="#713f12" font-family="Segoe UI">EN_ATTENTE</text>
+  <text x="450" y="153" text-anchor="middle" font-size="11" fill="#92400e" font-family="Segoe UI">entry / notifier médecin</text>
+
+  <!-- EN_ATTENTE -> CONFIRME -->
+  <line x1="450" y1="168" x2="450" y2="215" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="460" y="198" font-size="11" fill="#059669" font-family="Segoe UI">valider() [médecin]</text>
+
+  <!-- CONFIRME -->
+  <rect x="310" y="218" width="280" height="70" rx="30" fill="#dcfce7" stroke="#16a34a" stroke-width="2.5"/>
+  <text x="450" y="246" text-anchor="middle" font-size="14" font-weight="bold" fill="#14532d" font-family="Segoe UI">CONFIRMÉ</text>
+  <text x="450" y="263" text-anchor="middle" font-size="11" fill="#166534" font-family="Segoe UI">entry / notifier patient</text>
+  <text x="450" y="280" text-anchor="middle" font-size="11" fill="#166534" font-family="Segoe UI">do / générer lien consultation</text>
+
+  <!-- CONFIRME -> EN_COURS -->
+  <line x1="450" y1="288" x2="450" y2="350" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="460" y="325" font-size="11" fill="#2563eb" font-family="Segoe UI">démarrer() [date atteinte]</text>
+
+  <!-- EN_COURS -->
+  <rect x="310" y="353" width="280" height="65" rx="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5"/>
+  <text x="450" y="378" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e3a5f" font-family="Segoe UI">EN_COURS</text>
+  <text x="450" y="398" text-anchor="middle" font-size="11" fill="#1e40af" font-family="Segoe UI">do / session WebRTC active</text>
+
+  <!-- EN_COURS -> TERMINÉ -->
+  <line x1="450" y1="418" x2="450" y2="475" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="460" y="452" font-size="11" fill="#7c3aed" font-family="Segoe UI">terminer() [médecin]</text>
+
+  <!-- TERMINÉ -->
+  <rect x="310" y="478" width="280" height="65" rx="30" fill="#f3e8ff" stroke="#7c3aed" stroke-width="2.5"/>
+  <text x="450" y="505" text-anchor="middle" font-size="14" font-weight="bold" fill="#3b0764" font-family="Segoe UI">TERMINÉ</text>
+  <text x="450" y="522" text-anchor="middle" font-size="11" fill="#4c1d95" font-family="Segoe UI">entry / MAJ dossier médical</text>
+  <text x="450" y="538" text-anchor="middle" font-size="11" fill="#4c1d95" font-family="Segoe UI">do / générer ordonnance si besoin</text>
+
+  <!-- TERMINÉ -> Final -->
+  <line x1="450" y1="543" x2="450" y2="600" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <circle cx="450" cy="617" r="16" fill="none" stroke="#334155" stroke-width="2.5"/>
+  <circle cx="450" cy="617" r="10" fill="#334155"/>
+
+  <!-- === Transitions latérales ANNULATION === -->
+  <!-- EN_ATTENTE -> ANNULÉ (patient) -->
+  <path d="M310,138 Q150,138 150,420 Q150,620 310,620" fill="none" stroke="#dc2626" stroke-width="2" marker-end="url(#arr)" stroke-dasharray="none"/>
+  <text x="30" y="385" font-size="11" fill="#dc2626" font-family="Segoe UI" transform="rotate(-90, 100, 390)">annuler() [patient ou médecin]</text>
+
+  <!-- CONFIRME -> ANNULÉ -->
+  <path d="M310,248 Q250,248 220,350 Q190,450 220,550 Q250,620 300,632" fill="none" stroke="#dc2626" stroke-width="2" marker-end="url(#arr)" stroke-dasharray="6,3"/>
+
+  <!-- ANNULÉ state -->
+  <rect x="590" y="560" width="210" height="60" rx="30" fill="#fef2f2" stroke="#dc2626" stroke-width="2.5"/>
+  <text x="695" y="585" text-anchor="middle" font-size="14" font-weight="bold" fill="#7f1d1d" font-family="Segoe UI">ANNULÉ</text>
+  <text x="695" y="603" text-anchor="middle" font-size="11" fill="#991b1b" font-family="Segoe UI">entry / notifier les parties</text>
+
+  <!-- EN_ATTENTE -> ANNULÉ via refus médecin -->
+  <path d="M590,148 Q750,148 750,400 Q750,530 800,590" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arr)"/>
+  <text x="760" y="340" font-size="11" fill="#dc2626" font-family="Segoe UI">refuser() [médecin]</text>
+
+  <!-- ANNULÉ -> Final -->
+  <line x1="695" y1="620" x2="695" y2="650" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="695" y1="650" x2="466" y2="650" stroke="#334155" stroke-width="2"/>
+
+  <!-- CONFIRME -> REPROGRAMME -->
+  <rect x="610" y="218" width="220" height="60" rx="30" fill="#fff7ed" stroke="#ea580c" stroke-width="2.5"/>
+  <text x="720" y="244" text-anchor="middle" font-size="13" font-weight="bold" fill="#7c2d12" font-family="Segoe UI">REPROGRAMMÉ</text>
+  <text x="720" y="263" text-anchor="middle" font-size="11" fill="#9a3412" font-family="Segoe UI">entry / notifier patient</text>
+
+  <line x1="590" y1="253" x2="610" y2="253" stroke="#ea580c" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="595" y="245" font-size="10" fill="#ea580c" font-family="Segoe UI">reprogrammer()</text>
+
+  <!-- REPROGRAMME -> EN_ATTENTE -->
+  <path d="M720,218 Q720,150 590,138" fill="none" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+  <text x="700" y="165" font-size="10" fill="#ea580c" font-family="Segoe UI">→ EN_ATTENTE</text>
+
+  <!-- Légende -->
+  <rect x="30" y="640" width="400" height="44" rx="6" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+  <circle cx="55" cy="662" r="8" fill="#334155"/>
+  <text x="72" y="666" font-size="11" fill="#334155" font-family="Segoe UI">État initial</text>
+  <circle cx="140" cy="662" r="10" fill="none" stroke="#334155" stroke-width="2"/>
+  <circle cx="140" cy="662" r="6" fill="#334155"/>
+  <text x="158" y="666" font-size="11" fill="#334155" font-family="Segoe UI">État final</text>
+  <rect x="220" y="654" width="60" height="16" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="250" y="666" text-anchor="middle" font-size="10" fill="#14532d" font-family="Segoe UI">état</text>
+  <text x="295" y="666" font-size="11" fill="#334155" font-family="Segoe UI">= état UML</text>
+  <line x1="355" y1="654" x2="395" y2="654" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="357" y="674" font-size="10" fill="#334155" font-family="Segoe UI">transition</text>
+</svg>
+</body>
+</html>
