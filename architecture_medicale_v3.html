@@ -1,0 +1,217 @@
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue:   #1a3a5c; --teal:   #0d5c4a; --amber:  #7a4a00; --purple: #3a2870; --coral: #7a2010;
+  --blue-l:   #ddeaf7; --teal-l:   #d4f0e8; --amber-l:  #fdf0d5; --purple-l: #ebe8fc; --coral-l: #fde8e4;
+  --blue-m:   #6fa8d8; --teal-m:   #5bbfa0; --amber-m:  #e8b84b; --purple-m: #9b8ee8; --coral-m: #e89080;
+  --ink: #1a1a1a; --muted: #6b6b6b; --border: #e2e2e2; --bg: #f9f7f4;
+}
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); padding: 32px 28px; }
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+
+header { margin-bottom: 36px; border-bottom: 2px solid var(--ink); padding-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end; }
+header h1 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; line-height: 1.2; max-width: 340px; }
+header .meta { text-align: right; font-size: 10px; font-weight: 500; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; line-height: 1.9; }
+
+.diagram { display: flex; flex-direction: column; gap: 0; }
+
+.layer { display: grid; grid-template-columns: 150px 1fr; border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.04); transition: box-shadow .2s; opacity: 0; transform: translateY(14px); animation: fadeUp .5s ease forwards; }
+.layer:hover { box-shadow: 0 6px 20px rgba(0,0,0,.09); }
+.layer:nth-child(1){animation-delay:.05s}.layer:nth-child(3){animation-delay:.15s}.layer:nth-child(5){animation-delay:.25s}.layer:nth-child(7){animation-delay:.35s}.layer:nth-child(9){animation-delay:.45s}
+@keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+
+.layer-side { padding: 22px 16px; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+.layer-num { font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; opacity: .6; }
+.layer-name { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 700; line-height: 1.25; }
+.layer-desc { font-size: 10px; font-weight: 400; margin-top: 2px; opacity: .75; line-height: 1.5; }
+
+.layer-body { padding: 16px; border-left: 1.5px solid var(--border); display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+
+.card { flex: 1; min-width: 110px; border-radius: 8px; padding: 12px 12px 10px; border: 1px solid transparent; }
+.card-title { font-size: 12px; font-weight: 500; margin-bottom: 2px; line-height: 1.3; }
+.card-sub { font-size: 10px; font-weight: 300; opacity: .8; margin-bottom: 8px; line-height: 1.4; }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag { font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; padding: 2px 7px; border-radius: 4px; letter-spacing: .02em; }
+.badge-php { font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; padding: 1px 6px; border-radius: 4px; background: #fff3e0; color: #7a4a00; border: 1px solid #e8b84b; margin-left: 6px; vertical-align: middle; }
+
+.l-blue .layer-side { background: var(--blue-l); color: var(--blue); }
+.l-blue .card { background: var(--blue-l); border-color: var(--blue-m); }
+.l-blue .card-title,.l-blue .card-sub { color: var(--blue); }
+.l-blue .tag { background:#fff; color:var(--blue); border:1px solid var(--blue-m); }
+
+.l-coral .layer-side { background: var(--coral-l); color: var(--coral); }
+.l-coral .card { background: var(--coral-l); border-color: var(--coral-m); }
+.l-coral .card-title,.l-coral .card-sub { color: var(--coral); }
+.l-coral .tag { background:#fff; color:var(--coral); border:1px solid var(--coral-m); }
+
+.l-teal .layer-side { background: var(--teal-l); color: var(--teal); }
+.l-teal .card { background: var(--teal-l); border-color: var(--teal-m); }
+.l-teal .card-title,.l-teal .card-sub { color: var(--teal); }
+.l-teal .tag { background:#fff; color:var(--teal); border:1px solid var(--teal-m); }
+
+.l-amber .layer-side { background: var(--amber-l); color: var(--amber); }
+.l-amber .card { background: var(--amber-l); border-color: var(--amber-m); }
+.l-amber .card-title,.l-amber .card-sub { color: var(--amber); }
+.l-amber .tag { background:#fff; color:var(--amber); border:1px solid var(--amber-m); }
+
+.l-purple .layer-side { background: var(--purple-l); color: var(--purple); }
+.l-purple .card { background: var(--purple-l); border-color: var(--purple-m); }
+.l-purple .card-title,.l-purple .card-sub { color: var(--purple); }
+.l-purple .tag { background:#fff; color:var(--purple); border:1px solid var(--purple-m); }
+
+.connector { display:flex; align-items:center; gap:10px; padding:0 16px 0 166px; height:40px; }
+.conn-line { flex:1; height:1px; border-top:1.5px dashed var(--border); position:relative; }
+.conn-line::after { content:'▼'; position:absolute; right:-5px; top:-8px; font-size:9px; color:var(--muted); }
+.conn-label { font-family:'DM Mono',monospace; font-size:9px; font-weight:500; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; background:var(--bg); padding:0 8px; }
+
+footer { margin-top:32px; padding-top:14px; border-top:1px solid var(--border); font-size:10px; color:var(--muted); display:flex; justify-content:space-between; }
+</style>
+
+<header>
+  <h1>Architecture du système de gestion de rendez-vous médicaux</h1>
+  <div class="meta">Stack mixte<br>PHP · HTML · CSS · JS<br>Node.js · PostgreSQL</div>
+</header>
+
+<div class="diagram">
+
+  <div class="layer l-blue">
+    <div class="layer-side">
+      <span class="layer-num">Couche 01</span>
+      <span class="layer-name">Cliente</span>
+      <span class="layer-desc">Ce que voit l'utilisateur</span>
+    </div>
+    <div class="layer-body">
+      <div class="card">
+        <div class="card-title">Structure</div>
+        <div class="card-sub">Pages et contenu</div>
+        <div class="tags"><span class="tag">HTML5</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Mise en forme</div>
+        <div class="card-sub">Style, responsive</div>
+        <div class="tags"><span class="tag">CSS3</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Interactivité</div>
+        <div class="card-sub">Appels API, DOM</div>
+        <div class="tags"><span class="tag">JavaScript</span><span class="tag">Fetch API</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector">
+    <span class="conn-label">Formulaires HTML → PHP</span>
+    <div class="conn-line"></div>
+  </div>
+
+  <div class="layer l-coral">
+    <div class="layer-side">
+      <span class="layer-num">Couche 02</span>
+      <span class="layer-name">Auth <span class="badge-php">PHP</span></span>
+      <span class="layer-desc">Login & sessions utilisateur</span>
+    </div>
+    <div class="layer-body">
+      <div class="card">
+        <div class="card-title">Login / Register</div>
+        <div class="card-sub">Vérification mot de passe</div>
+        <div class="tags"><span class="tag">login.php</span><span class="tag">register.php</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Sessions</div>
+        <div class="card-sub">Maintien de la connexion</div>
+        <div class="tags"><span class="tag">$_SESSION</span><span class="tag">password_hash()</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Redirection</div>
+        <div class="card-sub">Vers dashboard selon rôle</div>
+        <div class="tags"><span class="tag">header()</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector">
+    <span class="conn-label">HTTP / JSON — REST API</span>
+    <div class="conn-line"></div>
+  </div>
+
+  <div class="layer l-teal">
+    <div class="layer-side">
+      <span class="layer-num">Couche 03</span>
+      <span class="layer-name">Serveur</span>
+      <span class="layer-desc">Logique métier et API</span>
+    </div>
+    <div class="layer-body">
+      <div class="card">
+        <div class="card-title">Gestion RDV</div>
+        <div class="card-sub">Créneaux, réservations</div>
+        <div class="tags"><span class="tag">Node.js</span><span class="tag">Express</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Dossiers & ordonnances</div>
+        <div class="card-sub">Historique, export PDF</div>
+        <div class="tags"><span class="tag">PDFKit</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Notifications</div>
+        <div class="card-sub">Rappels et emails</div>
+        <div class="tags"><span class="tag">Nodemailer</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector">
+    <span class="conn-label">Requêtes SQL — node-postgres</span>
+    <div class="conn-line"></div>
+  </div>
+
+  <div class="layer l-amber">
+    <div class="layer-side">
+      <span class="layer-num">Couche 04</span>
+      <span class="layer-name">Données</span>
+      <span class="layer-desc">Stockage et persistance</span>
+    </div>
+    <div class="layer-body">
+      <div class="card">
+        <div class="card-title">Base de données</div>
+        <div class="card-sub">Tables, relations, requêtes</div>
+        <div class="tags"><span class="tag">PostgreSQL</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Driver</div>
+        <div class="card-sub">Connexion Node.js ↔ BDD</div>
+        <div class="tags"><span class="tag">pg (node-postgres)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector">
+    <span class="conn-label">API externe</span>
+    <div class="conn-line"></div>
+  </div>
+
+  <div class="layer l-purple">
+    <div class="layer-side">
+      <span class="layer-num">Couche 05</span>
+      <span class="layer-name">Services externes</span>
+      <span class="layer-desc">Intégrations tierces</span>
+    </div>
+    <div class="layer-body">
+      <div class="card">
+        <div class="card-title">Visioconférence</div>
+        <div class="card-sub">Iframe dans la page HTML</div>
+        <div class="tags"><span class="tag">Jitsi Meet</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Emails</div>
+        <div class="card-sub">Rappels, confirmations</div>
+        <div class="tags"><span class="tag">Nodemailer</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span>Système de Gestion de Rendez-vous Médicaux — Architecture v3</span>
+  <span>Licence Informatique · Institut Galilée</span>
+</footer>
