@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagramme de Séquence UML — Téléconsultation</title>
+    <!-- Utilisation de la police Inter pour un rendu moderne et professionnel -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --blue-primary: #2563eb;
+            --blue-light: #eff6ff;
+            --slate-border: #cbd5e1;
+            --emerald: #10b981;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+            color: var(--text-main);
+            letter-spacing: -0.025em;
+        }
+
+        p.subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .diagram-container {
+            width: 100%;
+            max-width: 1200px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--slate-border);
+            padding: 20px;
+            overflow-x: auto;
+            /* Permet le scroll sur mobile */
+        }
+
+        svg {
+            display: block;
+            min-width: 1100px;
+            /* Assure que le SVG ne s'écrase pas trop sur petits écrans */
+            width: 100%;
+            height: auto;
+        }
+
+        /* Classes SVG pour un code plus propre */
+        .msg-line {
+            stroke: var(--text-main);
+            stroke-width: 1.5;
+        }
+
+        .msg-return {
+            stroke: var(--text-muted);
+            stroke-width: 1.5;
+            stroke-dasharray: 5, 4;
+        }
+
+        .msg-webrtc {
+            stroke: var(--emerald);
+            stroke-width: 2;
+            stroke-dasharray: 4, 4;
+        }
+
+        .msg-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 11.5px;
+            fill: var(--text-main);
+            font-weight: 500;
+        }
+
+        .msg-text-return {
+            font-family: 'Inter', sans-serif;
+            font-size: 11.5px;
+            fill: var(--text-muted);
+            font-style: italic;
+        }
+
+        .msg-text-webrtc {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            fill: var(--emerald);
+            font-weight: 600;
+        }
+
+        /* --- Couleurs personnalisées (Acteurs) --- */
+        .actor-medecin {
+            fill: #059669;
+            stroke: #047857;
+            stroke-width: 2;
+            rx: 6;
+        }
+
+        .actor-patient {
+            fill: #0284c7;
+            stroke: #0369a1;
+            stroke-width: 2;
+            rx: 6;
+        }
+
+        .actor-front {
+            fill: #4f46e5;
+            stroke: #4338ca;
+            stroke-width: 2;
+            rx: 6;
+        }
+
+        .actor-back {
+            fill: #ea580c;
+            stroke: #c2410c;
+            stroke-width: 2;
+            rx: 6;
+        }
+
+        .actor-bdd {
+            fill: #e11d48;
+            stroke: #be185d;
+            stroke-width: 2;
+            rx: 6;
+        }
+
+        .actor-notif {
+            fill: #9333ea;
+            stroke: #7e22ce;
+            stroke-width: 2;
+            rx: 6;
+        }
+
+        .actor-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-anchor: middle;
+            fill: #ffffff;
+        }
+
+        /* --- Lignes de vie --- */
+        .line-medecin {
+            stroke: #059669;
+            stroke-width: 1.5;
+            stroke-dasharray: 6, 4;
+            opacity: 0.5;
+        }
+
+        .line-patient {
+            stroke: #0284c7;
+            stroke-width: 1.5;
+            stroke-dasharray: 6, 4;
+            opacity: 0.5;
+        }
+
+        .line-front {
+            stroke: #4f46e5;
+            stroke-width: 1.5;
+            stroke-dasharray: 6, 4;
+            opacity: 0.5;
+        }
+
+        .line-back {
+            stroke: #ea580c;
+            stroke-width: 1.5;
+            stroke-dasharray: 6, 4;
+            opacity: 0.5;
+        }
+
+        .line-bdd {
+            stroke: #e11d48;
+            stroke-width: 1.5;
+            stroke-dasharray: 6, 4;
+            opacity: 0.5;
+        }
+
+        .line-notif {
+            stroke: #9333ea;
+            stroke-width: 1.5;
+            stroke-dasharray: 6, 4;
+            opacity: 0.5;
+        }
+
+        /* --- Boîtes d'activation (Teintes pastel assorties) --- */
+        .box-medecin {
+            fill: #d1fae5;
+            stroke: #059669;
+            stroke-width: 1;
+            rx: 2;
+        }
+
+        .box-patient {
+            fill: #e0f2fe;
+            stroke: #0284c7;
+            stroke-width: 1;
+            rx: 2;
+        }
+
+        .box-front {
+            fill: #e0e7ff;
+            stroke: #4f46e5;
+            stroke-width: 1;
+            rx: 2;
+        }
+
+        .box-back {
+            fill: #ffedd5;
+            stroke: #ea580c;
+            stroke-width: 1;
+            rx: 2;
+        }
+
+        .box-bdd {
+            fill: #ffe4e6;
+            stroke: #e11d48;
+            stroke-width: 1;
+            rx: 2;
+        }
+
+        .box-notif {
+            fill: #f3e8ff;
+            stroke: #9333ea;
+            stroke-width: 1;
+            rx: 2;
+        }
+
+        /* --- Couleurs des Blocs (Phases) --- */
+        .frame-recherche {
+            fill: rgba(236, 254, 255, 0.6);
+            stroke: #06b6d4;
+            stroke-width: 1.5;
+            rx: 6;
+        }
+
+        .tab-recherche {
+            fill: #cffafe;
+            stroke: #06b6d4;
+            stroke-width: 1.5;
+        }
+
+        .text-recherche {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            fill: #0891b2;
+            text-anchor: middle;
+        }
+
+        .frame-rdv {
+            fill: rgba(254, 252, 232, 0.7);
+            stroke: #eab308;
+            stroke-width: 1.5;
+            rx: 6;
+        }
+
+        .tab-rdv {
+            fill: #fef08a;
+            stroke: #eab308;
+            stroke-width: 1.5;
+        }
+
+        .text-rdv {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            fill: #ca8a04;
+            text-anchor: middle;
+        }
+
+        .frame-consult {
+            fill: rgba(250, 245, 255, 0.7);
+            stroke: #a855f7;
+            stroke-width: 1.5;
+            rx: 6;
+        }
+
+        .tab-consult {
+            fill: #e9d5ff;
+            stroke: #a855f7;
+            stroke-width: 1.5;
+        }
+
+        .text-consult {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            fill: #9333ea;
+            text-anchor: middle;
+        }
+
+        .frame-presc {
+            fill: rgba(255, 241, 242, 0.7);
+            stroke: #f43f5e;
+            stroke-width: 1.5;
+            rx: 6;
+        }
+
+        .tab-presc {
+            fill: #fecdd3;
+            stroke: #f43f5e;
+            stroke-width: 1.5;
+        }
+
+        .text-presc {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            fill: #e11d48;
+            text-anchor: middle;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>Diagramme de Séquence UML</h1>
+        <p class="subtitle">Scénario : Prise de rendez-vous, Téléconsultation et Prescription</p>
+    </div>
+
+    <div class="diagram-container">
+        <svg viewBox="0 0 1200 1350" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <!-- Flèche pleine (Appel synchrone) -->
+                <marker id="arrow-call" markerWidth="10" markerHeight="10" refX="9" refY="5"
+                    orient="auto-start-reverse">
+                    <path d="M 0 1 L 10 5 L 0 9 z" fill="#1e293b" />
+                </marker>
+                <!-- Flèche pointillée (Retour) -->
+                <marker id="arrow-return" markerWidth="10" markerHeight="10" refX="9" refY="5"
+                    orient="auto-start-reverse">
+                    <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+                </marker>
+            </defs>
+
+            <!-- ========================================== -->
+            <!-- EN-TÊTES DES ACTEURS ET SYSTÈMES           -->
+            <!-- ========================================== -->
+            <!-- Axe X: Médecin(100), Patient(300), Front(500), Back(700), BDD(900), Notif(1100) -->
+
+            <!-- Médecin -->
+            <rect x="40" y="20" width="120" height="40" class="actor-medecin" />
+            <text x="100" y="45" class="actor-text">👨‍⚕️ Médecin</text>
+
+            <!-- Patient -->
+            <rect x="240" y="20" width="120" height="40" class="actor-patient" />
+            <text x="300" y="45" class="actor-text">👤 Patient</text>
+
+            <!-- Frontend -->
+            <rect x="440" y="20" width="120" height="40" class="actor-front" />
+            <text x="500" y="45" class="actor-text">💻 Frontend App</text>
+
+            <!-- Backend API -->
+            <rect x="640" y="20" width="120" height="40" class="actor-back" />
+            <text x="700" y="45" class="actor-text">⚙️ Backend API</text>
+
+            <!-- Base de données -->
+            <rect x="840" y="20" width="120" height="40" class="actor-bdd" />
+            <text x="900" y="45" class="actor-text">🗄️ Base de données</text>
+
+            <!-- Service Notification -->
+            <rect x="1040" y="20" width="120" height="40" class="actor-notif" />
+            <text x="1100" y="45" class="actor-text">✉️ Service Notif.</text>
+
+            <!-- Lignes de vie (Lifelines) -->
+            <line x1="100" y1="60" x2="100" y2="1260" class="line-medecin" />
+            <line x1="300" y1="60" x2="300" y2="1260" class="line-patient" />
+            <line x1="500" y1="60" x2="500" y2="1260" class="line-front" />
+            <line x1="700" y1="60" x2="700" y2="1260" class="line-back" />
+            <line x1="900" y1="60" x2="900" y2="1260" class="line-bdd" />
+            <line x1="1100" y1="60" x2="1100" y2="1260" class="line-notif" />
+
+            <!-- ========================================== -->
+            <!-- FRAGMENTS / BLOCS DE PHASES                -->
+            <!-- ========================================== -->
+
+            <!-- Phase 1: Recherche -->
+            <g>
+                <rect x="220" y="100" width="760" height="230" class="frame-recherche" />
+                <path d="M 220 130 L 320 130 L 330 120 L 330 100 L 220 100 Z" class="tab-recherche" />
+                <text x="275" y="118" class="text-recherche">Recherche</text>
+            </g>
+
+            <!-- Phase 2: Prise de RDV -->
+            <g>
+                <rect x="20" y="350" width="1160" height="400" class="frame-rdv" />
+                <path d="M 20 380 L 140 380 L 150 370 L 150 350 L 20 350 Z" class="tab-rdv" />
+                <text x="85" y="368" class="text-rdv">Prise de RDV</text>
+            </g>
+
+            <!-- Phase 3: Consultation -->
+            <g>
+                <rect x="20" y="770" width="760" height="230" class="frame-consult" />
+                <path d="M 20 800 L 140 800 L 150 790 L 150 770 L 20 770 Z" class="tab-consult" />
+                <text x="85" y="788" class="text-consult">Consultation</text>
+            </g>
+
+            <!-- Phase 4: Prescription -->
+            <g>
+                <rect x="20" y="1020" width="960" height="220" class="frame-presc" />
+                <path d="M 20 1050 L 140 1050 L 150 1040 L 150 1020 L 20 1020 Z" class="tab-presc" />
+                <text x="85" y="1038" class="text-presc">Prescription</text>
+            </g>
+
+            <!-- ========================================== -->
+            <!-- BOÎTES D'ACTIVITÉ (Activation Boxes)       -->
+            <!-- ========================================== -->
+
+            <!-- Patient -->
+            <rect x="295" y="140" width="10" height="170" class="box-patient" />
+            <rect x="295" y="380" width="10" height="30" class="box-patient" />
+            <rect x="295" y="730" width="10" height="20" class="box-patient" />
+            <rect x="295" y="800" width="10" height="120" class="box-patient" />
+
+            <!-- Frontend -->
+            <rect x="495" y="150" width="10" height="150" class="box-front" />
+            <rect x="495" y="390" width="10" height="60" class="box-front" />
+            <rect x="495" y="580" width="10" height="70" class="box-front" />
+            <rect x="495" y="810" width="10" height="80" class="box-front" />
+            <rect x="495" y="960" width="10" height="30" class="box-front" />
+            <rect x="495" y="1060" width="10" height="160" class="box-front" />
+
+            <!-- Backend -->
+            <rect x="695" y="180" width="10" height="110" class="box-back" />
+            <rect x="695" y="420" width="10" height="110" class="box-back" />
+            <rect x="695" y="610" width="10" height="110" class="box-back" />
+            <rect x="695" y="840" width="10" height="40" class="box-back" />
+            <rect x="695" y="1090" width="10" height="80" class="box-back" />
+
+            <!-- BDD -->
+            <rect x="895" y="210" width="10" height="50" class="box-bdd" />
+            <rect x="895" y="450" width="10" height="50" class="box-bdd" />
+            <rect x="895" y="640" width="10" height="50" class="box-bdd" />
+            <rect x="895" y="1120" width="10" height="40" class="box-bdd" />
+
+            <!-- Notif -->
+            <rect x="1095" y="510" width="10" height="60" class="box-notif" />
+            <rect x="1095" y="700" width="10" height="50" class="box-notif" />
+
+            <!-- Médecin -->
+            <rect x="95" y="550" width="10" height="50" class="box-medecin" />
+            <rect x="95" y="820" width="10" height="170" class="box-medecin" />
+            <rect x="95" y="1050" width="10" height="30" class="box-medecin" />
+            <rect x="95" y="1200" width="10" height="20" class="box-medecin" />
+
+
+            <!-- ========================================== -->
+            <!-- MESSAGES ET FLÈCHES                        -->
+            <!-- ========================================== -->
+
+            <!-- PHASE 1: Recherche -->
+            <line x1="305" y1="160" x2="495" y2="160" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="400" y="153" class="msg-text" text-anchor="middle">1. Recherche(specialite)</text>
+
+            <line x1="505" y1="190" x2="695" y2="190" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="600" y="183" class="msg-text" text-anchor="middle">2. rechercherMedecins(specialite)</text>
+
+            <line x1="705" y1="220" x2="895" y2="220" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="800" y="213" class="msg-text" text-anchor="middle">3. trouverMedecinsDisponibles()</text>
+
+            <line x1="895" y1="250" x2="705" y2="250" class="msg-return" marker-end="url(#arrow-return)" />
+            <text x="800" y="243" class="msg-text-return" text-anchor="middle">4. listeMedecins</text>
+
+            <line x1="695" y1="280" x2="505" y2="280" class="msg-return" marker-end="url(#arrow-return)" />
+            <text x="600" y="273" class="msg-text-return" text-anchor="middle">5. resultatsMedecins</text>
+
+            <line x1="495" y1="310" x2="305" y2="310" class="msg-return" marker-end="url(#arrow-return)" />
+            <text x="400" y="303" class="msg-text-return" text-anchor="middle">6. afficherResultats()</text>
+
+            <!-- PHASE 2: Prise de RDV -->
+            <line x1="305" y1="400" x2="495" y2="400" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="400" y="393" class="msg-text" text-anchor="middle">7. selectionnerCreneau(medecinId, date)</text>
+
+            <line x1="505" y1="430" x2="695" y2="430" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="600" y="423" class="msg-text" text-anchor="middle">8. reserverRendezVous(details)</text>
+
+            <line x1="705" y1="460" x2="895" y2="460" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="800" y="453" class="msg-text" text-anchor="middle">9. enregistrerDemandeRDV()</text>
+
+            <line x1="895" y1="490" x2="705" y2="490" class="msg-return" marker-end="url(#arrow-return)" />
+            <text x="800" y="483" class="msg-text-return" text-anchor="middle">10. rdvCree(statut = EN_ATTENTE)</text>
+
+            <line x1="705" y1="520" x2="1095" y2="520" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="900" y="513" class="msg-text" text-anchor="middle">11. planifierNotifDemande(rdvId)</text>
+
+            <line x1="1095" y1="560" x2="105" y2="560" class="msg-line" marker-end="url(#arrow-call)" />
+            <rect x="530" y="546" width="140" height="20" fill="rgba(255, 255, 255, 0.85)" rx="4" />
+            <!-- Fond pour lisibilité -->
+            <text x="600" y="555" class="msg-text" text-anchor="middle">12. notifierNouvelleDemande()</text>
+
+            <line x1="105" y1="590" x2="495" y2="590" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="300" y="583" class="msg-text" text-anchor="middle">13. validerDemande(rdvId)</text>
+
+            <line x1="505" y1="620" x2="695" y2="620" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="600" y="613" class="msg-text" text-anchor="middle">14. confirmerRendezVous(rdvId)</text>
+
+            <line x1="705" y1="650" x2="895" y2="650" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="800" y="643" class="msg-text" text-anchor="middle">15. majStatut(CONFIRME)</text>
+
+            <line x1="895" y1="680" x2="705" y2="680" class="msg-return" marker-end="url(#arrow-return)" />
+            <text x="800" y="673" class="msg-text-return" text-anchor="middle">16. statutMisAJour</text>
+
+            <line x1="705" y1="710" x2="1095" y2="710" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="900" y="703" class="msg-text" text-anchor="middle">17. planifierNotifConfirmation()</text>
+
+            <line x1="1095" y1="740" x2="305" y2="740" class="msg-line" marker-end="url(#arrow-call)" />
+            <rect x="610" y="726" width="180" height="20" fill="rgba(255, 255, 255, 0.85)" rx="4" />
+            <text x="700" y="735" class="msg-text" text-anchor="middle">18. envoyerConfirmationEtLienVisio()</text>
+
+            <!-- PHASE 3: Consultation -->
+            <line x1="305" y1="820" x2="495" y2="820" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="400" y="813" class="msg-text" text-anchor="middle">19. rejoindreConsultation(rdvId)</text>
+
+            <line x1="105" y1="840" x2="495" y2="840" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="300" y="833" class="msg-text" text-anchor="middle">20. demarrerConsultation(rdvId)</text>
+
+            <line x1="505" y1="860" x2="695" y2="860" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="600" y="853" class="msg-text" text-anchor="middle">21. initialiserVisioSession()</text>
+
+            <line x1="695" y1="890" x2="505" y2="890" class="msg-return" marker-end="url(#arrow-return)" />
+            <text x="600" y="883" class="msg-text-return" text-anchor="middle">22. tokenSecuriseJitsi</text>
+
+            <!-- Flux WebRTC -->
+            <line x1="105" y1="930" x2="295" y2="930" class="msg-webrtc" />
+            <line x1="295" y1="940" x2="105" y2="940" class="msg-webrtc" />
+            <text x="200" y="925" class="msg-text-webrtc" text-anchor="middle">23. Flux Vidéo WebRTC
+                (Peer-to-Peer)</text>
+
+            <line x1="105" y1="980" x2="495" y2="980" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="300" y="973" class="msg-text" text-anchor="middle">24. terminerConsultation()</text>
+
+            <!-- PHASE 4: Prescription -->
+            <line x1="105" y1="1070" x2="495" y2="1070" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="300" y="1063" class="msg-text" text-anchor="middle">25. redigerOrdonnance(details)</text>
+
+            <line x1="505" y1="1100" x2="695" y2="1100" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="600" y="1093" class="msg-text" text-anchor="middle">26. genererOrdonnance(rdvId, details)</text>
+
+            <line x1="705" y1="1130" x2="895" y2="1130" class="msg-line" marker-end="url(#arrow-call)" />
+            <text x="800" y="1123" class="msg-text" text-anchor="middle">27. sauvegarderOrdonnance()</text>
+
+            <line x1="895" y1="1160" x2="705" y2="1160" class="msg-return" marker-end="url(#arrow-return)" />
+            <text x="800" y="1153" class="msg-text-return" text-anchor="middle">28. confirmationSauvegarde</text>
+
+            <line x1="695" y1="1190" x2="505" y2="1190" class="msg-return" marker-end="url(#arrow-return)" />
+            <text x="600" y="1183" class="msg-text-return" text-anchor="middle">29. ordonnancePDF</text>
+
+            <line x1="495" y1="1210" x2="105" y2="1210" class="msg-return" marker-end="url(#arrow-return)" />
+            <text x="300" y="1203" class="msg-text-return" text-anchor="middle">30. mettreADispositionMedecin()</text>
+
+            <line x1="495" y1="1240" x2="305" y2="1240" class="msg-return" marker-end="url(#arrow-return)" />
+            <text x="400" y="1233" class="msg-text-return" text-anchor="middle">31.
+                notifierPatientDocumentDispo()</text>
+
+            <!-- ========================================== -->
+            <!-- LÉGENDE UML                                -->
+            <!-- ========================================== -->
+            <g transform="translate(940, 1220)">
+                <rect x="0" y="0" width="240" height="90" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="4" />
+                <text x="120" y="20" class="frame-text" text-anchor="middle">Légende UML</text>
+
+                <line x1="15" y1="35" x2="45" y2="35" class="msg-line" marker-end="url(#arrow-call)" />
+                <text x="55" y="39" class="msg-text">Appel Synchrone</text>
+
+                <line x1="15" y1="55" x2="45" y2="55" class="msg-return" marker-end="url(#arrow-return)" />
+                <text x="55" y="59" class="msg-text-return">Retour / Réponse</text>
+
+                <line x1="15" y1="75" x2="45" y2="75" class="msg-webrtc" />
+                <text x="55" y="79" class="msg-text-webrtc" fill="#10b981">Flux asynchrone / Vidéo</text>
+            </g>
+
+        </svg>
+    </div>
+</body>
+
+</html>
