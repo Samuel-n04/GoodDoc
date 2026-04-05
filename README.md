@@ -1,127 +1,176 @@
-# Medical Appointment Management System with Online Consultation
+# GooDoc — Gestion de rendez-vous médicaux
 
-## Description
-
-This platform is designed to streamline the process of booking medical appointments and enables patients to consult with a doctor via video conferencing. It brings together patients and healthcare providers in a single, secure digital environment — reducing administrative overhead and improving access to care.
+Plateforme web de prise de rendez-vous médicaux avec espace patient, espace médecin, dossier médical électronique et génération d'ordonnances en PDF.
 
 ---
 
-## Features
+## Stack technique
 
-### 👤 User Account Management
-- Patient and doctor account creation with detailed profiles
-- Role-based access (patient, doctor, administrator)
-- Secure authentication and profile management
-
-### 📅 Online Appointment Booking
-- Real-time availability calendar shared between doctors and patients
-- Appointment request, confirmation, and cancellation workflows
-- Conflict detection to prevent double bookings
-
-### 🎥 Integrated Video Consultation
-- Built-in video conferencing for remote medical consultations
-- Secure, encrypted video sessions between patient and doctor
-- Session recording options (with consent)
-
-### 📋 Electronic Prescription System
-- Doctors can issue digital prescriptions at the end of a consultation
-- Prescriptions are stored securely and accessible by the patient
-- Exportable in PDF format for pharmacy use
-
-### 🗂️ Medical Records Management
-- Complete history of consultations and diagnoses
-- Access to past prescriptions and medical notes
-- Patient records visible only to authorized healthcare providers
-
-### 🔔 Notifications & Reminders
-- Automated email and/or SMS reminders before appointments
-- In-app notifications for booking confirmations and updates
-- Customizable reminder timing for patients and doctors
+| Couche | Technologie |
+|---|---|
+| Frontend | HTML / CSS / JavaScript (vanilla) |
+| Backend API | Node.js / Express |
+| Base de données | PostgreSQL |
+| Authentification | JWT (jsonwebtoken) + bcrypt |
+| Serveur de dev PHP | PHP built-in server (`php -S`) |
 
 ---
 
-## Getting Started
+## Prérequis
 
-### Prerequisites
+- Node.js >= 18
+- PHP >= 8.0 avec l'extension `pdo_pgsql` et `curl` activées
+- PostgreSQL >= 14
 
-- Node.js (or the relevant runtime for your stack)
-- A database system (e.g., PostgreSQL, MySQL, or MongoDB)
-- A video conferencing API (e.g., Twilio, Jitsi, or WebRTC)
-- An email/SMS service (e.g., SendGrid, Twilio SMS)
+---
 
-### Installation
+## Installation
+
+### 1. Cloner le dépôt
 
 ```bash
-# Clone the repository
-git clone https://github.com/Samuel-n04/Genie_log.git
+git clone https://github.com/samuel-n04/gooddoc.git
+cd gooddoc
+```
 
-# Navigate into the project directory
-cd Genie_log
+### 2. Installer les dépendances Node.js
 
-# Install dependencies
+```bash
+cd backend
 npm install
+```
 
-# Configure environment variables
-cp .env.example .env
-# Edit .env with your database, video API, and notification service credentials
+### 3. Configurer les variables d'environnement
 
-# Run database migrations
-npm run migrate
+```bash
+cp backend/.env.example backend/.env
+```
 
-# Start the development server
-npm run dev
+Ouvrir `backend/.env` et renseigner les valeurs :
+
+```env
+PORT=3000
+
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=goodoc
+DB_USER=postgres
+DB_PASSWORD=votre_mot_de_passe
+
+JWT_SECRET=une_chaine_secrete_longue_et_aleatoire
+JWT_EXPIRES_IN=24h
+```
+
+Ouvrir `frontend/config.php` et ajuster le fallback du mot de passe si nécessaire (pour le serveur de dev PHP uniquement) :
+
+```php
+$pass = getenv('DB_PASSWORD') ?: 'votre_mot_de_passe';
+```
+
+### 4. Créer la base de données
+
+```bash
+createdb goodoc
+```
+
+Puis appliquer le schéma :
+
+```bash
+psql -U postgres -d goodoc -f table.sql
 ```
 
 ---
 
-## Project Structure
+## Lancement
+
+Le projet nécessite deux serveurs lancés en parallele, chacun dans un terminal distinct.
+
+### Terminal 1 — API Node.js
+
+```bash
+cd backend
+node server.js
+```
+
+Le serveur doit afficher :
 
 ```
-Genie_log/
-├── src/
-│   ├── auth/           # Authentication & authorization
-│   ├── users/          # Patient and doctor profiles
-│   ├── appointments/   # Appointment booking & calendar
-│   ├── consultations/  # Video consultation sessions
-│   ├── prescriptions/  # Electronic prescription management
-│   ├── records/        # Medical records & history
-│   └── notifications/  # Reminders and alerts
-├── public/             # Static assets
-├── tests/              # Test suites
+GooDoc API demarree sur http://localhost:3000
+Connecte a PostgreSQL
+```
+
+### Terminal 2 — Frontend PHP
+
+```bash
+cd frontend
+php -S localhost:8000
+```
+
+Ouvrir ensuite [http://localhost:8000](http://localhost:8000) dans le navigateur.
+
+---
+
+## Utilisation
+
+### Inscription et connexion
+
+Se rendre sur `http://localhost:8000/register.php` pour creer un compte patient ou medecin, puis se connecter via `login.php`.
+
+### Espace patient
+
+- **Tableau de bord** : prochains rendez-vous et statistiques, rafraichissement automatique toutes les 30 secondes.
+- **Mes rendez-vous** : prise de rendez-vous, annulation, acces a la consultation video.
+- **Dossier medical** : antecedents, allergies, groupe sanguin, ordonnances avec export PDF.
+- **Mon profil** : modification des informations personnelles et medicales.
+
+### Espace medecin
+
+- **Rendez-vous** : validation ou refus des demandes, demarrage de la consultation video, redaction d'ordonnances.
+- **Creneaux** : ajout et gestion des creneaux de disponibilite.
+
+---
+
+## Structure du projet
+
+```
+gooddoc/
+├── backend/
+│   ├── routes/
+│   │   ├── auth.js           # Authentification JWT
+│   │   ├── patient.js        # Profil et donnees patient
+│   │   ├── medecin.js        # Profil, creneaux et donnees medecin
+│   │   ├── rdv.js            # Gestion des rendez-vous
+│   │   ├── dossier.js        # Dossier medical et ordonnances
+│   │   ├── consultation.js   # Sessions de consultation video
+│   │   └── notification.js   # Notifications
+│   ├── middleware/
+│   │   └── auth.js           # Verification du token JWT
+│   ├── db.js                 # Connexion PostgreSQL
+│   ├── server.js             # Point d'entree Express
+│   └── .env.example          # Template des variables d'environnement
+├── frontend/
+│   ├── pages/
+│   │   ├── dashboard.html
+│   │   ├── rdv.html
+│   │   ├── dossier.html
+│   │   ├── medecin.html
+│   │   ├── medecins.html
+│   │   └── profil.html
+│   ├── js/
+│   │   └── api.js            # Client HTTP et gestion de session
+│   ├── css/
+│   ├── config.php            # Connexion PDO PostgreSQL
+│   ├── login.php
+│   ├── register.php
+│   └── logout.php
+├── table.sql                 # Schema de la base de donnees
 └── README.md
 ```
 
 ---
 
-## Usage
+## Notes de developpement
 
-1. **Register** as a patient or doctor.
-2. **Set up your profile** with relevant medical or professional information.
-3. **Book an appointment** by browsing doctor availability on the shared calendar.
-4. **Join the video consultation** at the scheduled time directly from the platform.
-5. **Receive your prescription** electronically after the consultation.
-6. **Access your medical records** at any time from your patient dashboard.
-
----
-
-## Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request.
-
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/your-feature`
-3. Commit your changes: `git commit -m 'Add your feature'`
-4. Push to the branch: `git push origin feature/your-feature`
-5. Open a pull request
-
----
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-## Contact
-
-For questions or suggestions, please open an issue in this repository.
+- Le fichier `backend/.env` est exclu du depot via `.gitignore`. Ne jamais le commiter.
+- Le frontend est servi par PHP uniquement pour la gestion des sessions d'authentification (login/register). Toutes les pages applicatives sont des fichiers HTML statiques qui communiquent avec l'API Node.js via `fetch`.
+- Le CORS est configure pour autoriser les origines `localhost` et `localhost:8000`. Si le port PHP est different, mettre a jour `backend/server.js`.
