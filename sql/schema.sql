@@ -1,14 +1,14 @@
 -- ============================================================
---  GooDoc — Schéma PostgreSQL (fichier racine, aligné sur sql/schema.sql)
+--  GooDoc — Schéma PostgreSQL
 -- ============================================================
 
 CREATE DATABASE goodoc;
 \c goodoc;
 
 -- Types énumérés
-CREATE TYPE statut_rdv    AS ENUM ('EN_ATTENTE', 'CONFIRME', 'ANNULE', 'TERMINE');
+CREATE TYPE statut_rdv AS ENUM ('EN_ATTENTE', 'CONFIRME', 'ANNULE', 'TERMINE');
 CREATE TYPE statut_consult AS ENUM ('EN_ATTENTE', 'EN_COURS', 'TERMINEE');
-CREATE TYPE type_notif    AS ENUM ('RAPPEL', 'CONFIRMATION', 'ANNULATION', 'INFO');
+CREATE TYPE type_notif AS ENUM ('RAPPEL', 'CONFIRMATION', 'ANNULATION', 'INFO');
 
 -- Utilisateur (table parente)
 CREATE TABLE utilisateur (
@@ -32,23 +32,23 @@ CREATE TABLE patient (
   groupe_sanguin  VARCHAR(3)
 );
 
--- Médecin  (PK = id, cohérent avec toutes les FK)
+-- Médecin
 CREATE TABLE medecin (
-  id                 SERIAL PRIMARY KEY,
-  utilisateur_id     INT NOT NULL REFERENCES utilisateur(id) ON DELETE CASCADE,
-  specialite         TEXT,
-  cabinet            TEXT,
-  numero_ordre       VARCHAR(20),
+  id               SERIAL PRIMARY KEY,
+  utilisateur_id   INT NOT NULL REFERENCES utilisateur(id) ON DELETE CASCADE,
+  specialite       TEXT,
+  cabinet          TEXT,
+  numero_ordre     VARCHAR(20),
   tarif_consultation DECIMAL(10,2) DEFAULT 25.00
 );
 
 -- Dossier médical
 CREATE TABLE dossier_medical (
-  id            SERIAL PRIMARY KEY,
-  patient_id    INT NOT NULL REFERENCES patient(id) ON DELETE CASCADE,
-  date_creation DATE DEFAULT CURRENT_DATE,
-  antecedents   TEXT,
-  allergies     TEXT
+  id             SERIAL PRIMARY KEY,
+  patient_id     INT NOT NULL REFERENCES patient(id) ON DELETE CASCADE,
+  date_creation  DATE DEFAULT CURRENT_DATE,
+  antecedents    TEXT,
+  allergies      TEXT
 );
 
 -- Créneau de disponibilité
@@ -62,17 +62,17 @@ CREATE TABLE creneau (
 
 -- Rendez-vous
 CREATE TABLE rendez_vous (
-  id         SERIAL PRIMARY KEY,
-  patient_id INT NOT NULL REFERENCES patient(id),
-  medecin_id INT NOT NULL REFERENCES medecin(id),
-  creneau_id INT  REFERENCES creneau(id),
-  date       DATE NOT NULL,
-  motif      TEXT,
-  statut     statut_rdv DEFAULT 'EN_ATTENTE',
-  created_at TIMESTAMP DEFAULT NOW()
+  id          SERIAL PRIMARY KEY,
+  patient_id  INT NOT NULL REFERENCES patient(id),
+  medecin_id  INT NOT NULL REFERENCES medecin(id),
+  creneau_id  INT REFERENCES creneau(id),
+  date        DATE NOT NULL,
+  motif       TEXT,
+  statut      statut_rdv DEFAULT 'EN_ATTENTE',
+  created_at  TIMESTAMP DEFAULT NOW()
 );
 
--- Consultation vidéo  (utilise statut_consult, pas statut_rdv)
+-- Consultation vidéo
 CREATE TABLE consultation_video (
   id             SERIAL PRIMARY KEY,
   rendez_vous_id INT NOT NULL REFERENCES rendez_vous(id) ON DELETE CASCADE,
@@ -83,7 +83,7 @@ CREATE TABLE consultation_video (
   ended_at       TIMESTAMP
 );
 
--- Ordonnance  (inclut medecin_id, rdv_id, instructions)
+-- Ordonnance
 CREATE TABLE ordonnance (
   id            SERIAL PRIMARY KEY,
   dossier_id    INT NOT NULL REFERENCES dossier_medical(id),

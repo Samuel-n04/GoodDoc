@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GooDoc — Médecins</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .medecin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    .medecin-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .medecin-avatar {
+      width: 48px;
+      height: 48px;
+      background: #eff6ff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+
+    .medecin-nom {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .medecin-spe {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 4px 0 8px;
+    }
+
+    .medecin-info {
+      font-size: 13px;
+      color: var(--text);
+      margin: 3px 0;
+    }
+
+    .medecin-tarif {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--primary);
+      margin-top: 10px;
+    }
+
+    .search-bar {
+      margin-bottom: 24px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .search-bar input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+    }
+
+    .search-bar select {
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-brand">🩺 GooDoc</div>
+    <div class="navbar-nav">
+      <a href="dashboard.html" class="nav-link">Accueil</a>
+      <a href="rdv.html" class="nav-link">Mes RDV</a>
+      <a href="dossier.html" class="nav-link">Dossier médical</a>
+      <a href="medecins.html" class="nav-link active">Médecins</a>
+    </div>
+    <div class="navbar-user">
+      <span id="user-name"></span>
+      <button class="btn-logout" onclick="window.location.href='../logout.php'">Déconnexion</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">Trouver un médecin</h1>
+
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Rechercher par nom..." oninput="filtrer()">
+      <select id="search-spe" onchange="filtrer()">
+        <option value="">Toutes les spécialités</option>
+      </select>
+    </div>
+
+    <div class="medecin-grid" id="medecin-grid">
+      <p style="color:var(--muted)">Chargement...</p>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    const session = JSON.parse(localStorage.getItem('goodoc_session') || '{}');
+    if (!session.user_id) window.location.href = '../login.php';
+    document.getElementById('user-name').textContent = `${session.prenom} ${session.nom}`;
+
+    let tousLesMedecins = [];
+
+    async function chargerMedecins() {
+      tousLesMedecins = await api.get('/medecins');
+
+      // Remplir filtre spécialités
+      const spes = [...new Set(tousLesMedecins.map(m => m.specialite).filter(Boolean))];
+      const sel = document.getElementById('search-spe');
+      spes.forEach(s => {
+        const o = document.createElement('option');
+        o.value = s; o.textContent = s;
+        sel.appendChild(o);
+      });
+
+      afficher(tousLesMedecins);
+    }
+
+    function filtrer() {
+      const q = document.getElementById('search-input').value.toLowerCase();
+      const spe = document.getElementById('search-spe').value;
+      const res = tousLesMedecins.filter(m => {
+        const nom = `${m.prenom} ${m.nom}`.toLowerCase();
+        return nom.includes(q) && (!spe || m.specialite === spe);
+      });
+      afficher(res);
+    }
+
+    function afficher(medecins) {
+      const grid = document.getElementById('medecin-grid');
+      if (!medecins.length) {
+        grid.innerHTML = '<p style="color:var(--muted)">Aucun médecin trouvé.</p>';
+        return;
+      }
+      grid.innerHTML = medecins.map(m => `
+      <div class="medecin-card">
+        <div class="medecin-avatar">👨‍⚕️</div>
+        <div class="medecin-nom">Dr. ${m.prenom} ${m.nom}</div>
+        <div class="medecin-spe">${m.specialite || 'Généraliste'}</div>
+        <div class="medecin-info">📍 ${m.cabinet || 'Cabinet non renseigné'}</div>
+        <div class="medecin-info">📞 ${m.telephone || 'Non renseigné'}</div>
+        <div class="medecin-tarif">${m.tarif_consultation ?? 25} €</div>
+        <button class="btn-primary btn-full" style="margin-top:14px"
+          onclick="window.location.href='rdv.html?medecin=${m.id}'">
+          Prendre rendez-vous
+        </button>
+      </div>
+    `).join('');
+    }
+
+    chargerMedecins();
+  </script>
+</body>
+
+</html>

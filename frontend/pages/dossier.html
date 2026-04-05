@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GooDoc — Dossier médical</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-brand">🩺 GooDoc</div>
+    <div class="navbar-nav">
+      <a href="dashboard.html" class="nav-link" id="nav-accueil">Accueil</a>
+      <a href="rdv.html" class="nav-link" id="nav-rdv">Mes RDV</a>
+      <a href="dossier.html" class="nav-link" id="nav-dossier">Dossier médical</a>
+      <a href="medecins.html" class="nav-link" id="nav-medecins">Médecins</a>
+      <a href="profil.html" class="nav-link" id="nav-profil">Mon profil</a>
+    </div>
+    <div class="navbar-user">
+      <a href="profil.html" class="user-avatar" id="user-avatar" title="Mon profil"></a>
+      <button class="btn-logout" onclick="window.location.href='../logout.php'">Déconnexion</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">Mon dossier médical</h1>
+
+    <div class="grid-2" style="margin-bottom:24px">
+      <div class="card">
+        <div class="card-title">Informations générales</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:6px">Antécédents</p>
+        <p id="antecedents" style="margin-bottom:16px">—</p>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:6px">Allergies</p>
+        <p id="allergies">—</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Profil patient</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div><span style="font-size:13px;color:var(--muted)">Groupe sanguin</span><br><strong
+              id="groupe-sanguin">—</strong></div>
+          <div><span style="font-size:13px;color:var(--muted)">Numéro SS</span><br><strong id="numero-ss">—</strong>
+          </div>
+          <div><span style="font-size:13px;color:var(--muted)">Date de naissance</span><br><strong
+              id="date-naissance">—</strong></div>
+        </div>
+        <a href="profil.html" class="btn-secondary btn-sm" style="margin-top:16px;display:inline-flex">✏️ Modifier mon
+          profil</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Ordonnances</div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Médecin</th>
+            <th>Médicaments</th>
+            <th>Instructions</th>
+            <th>PDF</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-ordonnances">
+          <tr>
+            <td colspan="5" style="text-align:center;color:var(--muted)">Chargement...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    const session = initNav('dossier');
+
+    async function chargerDossier() {
+      const [data, patient] = await Promise.all([
+        api.get(`/dossier/${session.patient_id}`),
+        api.get(`/patients/${session.patient_id}`)
+      ]);
+
+      if (data.dossier) {
+        document.getElementById('antecedents').textContent = data.dossier.antecedents || 'Aucun antécédent renseigné';
+        document.getElementById('allergies').textContent = data.dossier.allergies || 'Aucune allergie renseignée';
+      }
+
+      if (patient) {
+        document.getElementById('groupe-sanguin').textContent = patient.groupe_sanguin || '—';
+        document.getElementById('numero-ss').textContent = patient.numero_ss || '—';
+        document.getElementById('date-naissance').textContent = patient.date_naissance
+          ? new Date(patient.date_naissance).toLocaleDateString('fr-FR') : '—';
+      }
+
+      const tbody = document.getElementById('tbody-ordonnances');
+      if (!data.ordonnances?.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Aucune ordonnance</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.ordonnances.map(o => `
+      <tr>
+        <td>${new Date(o.date_emission).toLocaleDateString('fr-FR')}</td>
+        <td>Dr. ${o.medecin_prenom} ${o.medecin_nom}</td>
+        <td>${(o.medicaments || []).join(', ')}</td>
+        <td>${o.instructions || '—'}</td>
+        <td><a href="${API}/dossier/ordonnance/${o.id}/pdf" target="_blank" class="btn-secondary btn-sm">⬇ PDF</a></td>
+      </tr>
+    `).join('');
+    }
+
+    chargerDossier();
+  </script>
+</body>
+
+</html>

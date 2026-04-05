@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GooDoc — Mon profil</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .save-bar {
+            position: sticky;
+            bottom: 0;
+            background: var(--white);
+            border-top: 1px solid var(--border);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin: 24px -20px -28px;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, .06);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-brand">🩺 GooDoc</div>
+        <div class="navbar-nav">
+            <a href="dashboard.html" class="nav-link" id="nav-accueil">Accueil</a>
+            <a href="rdv.html" class="nav-link" id="nav-rdv">Mes RDV</a>
+            <a href="dossier.html" class="nav-link" id="nav-dossier">Dossier médical</a>
+            <a href="medecins.html" class="nav-link" id="nav-medecins">Médecins</a>
+            <a href="profil.html" class="nav-link" id="nav-profil">Mon profil</a>
+        </div>
+        <div class="navbar-user">
+            <a href="profil.html" class="user-avatar" id="user-avatar" title="Mon profil"></a>
+            <button class="btn-logout" onclick="window.location.href='../logout.php'">Déconnexion</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">Mon profil</h1>
+
+        <!-- En-tête -->
+        <div class="profile-header">
+            <div class="profile-avatar" id="profil-avatar">👤</div>
+            <div class="profile-header-info">
+                <h2 id="header-nom">—</h2>
+                <p class="email" id="header-email">—</p>
+                <p class="role-label" id="header-role"></p>
+            </div>
+        </div>
+
+        <div class="grid-2" style="gap:24px">
+
+            <!-- Informations personnelles -->
+            <div class="card">
+                <div class="card-title">Informations personnelles</div>
+                <div class="form-group">
+                    <label>Nom</label>
+                    <input type="text" id="input-nom" placeholder="Dupont">
+                </div>
+                <div class="form-group">
+                    <label>Prénom</label>
+                    <input type="text" id="input-prenom" placeholder="Jean">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="input-email" placeholder="jean@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Téléphone</label>
+                    <input type="tel" id="input-telephone" placeholder="06 12 34 56 78">
+                </div>
+            </div>
+
+            <!-- Informations médicales patient -->
+            <div class="card" id="carte-medicale">
+                <div class="card-title">Informations médicales</div>
+                <div class="form-group">
+                    <label>Date de naissance</label>
+                    <input type="date" id="input-naissance">
+                </div>
+                <div class="form-group">
+                    <label>Adresse</label>
+                    <input type="text" id="input-adresse" placeholder="12 rue de la Paix, Paris">
+                </div>
+                <div class="form-group">
+                    <label>Numéro de sécurité sociale</label>
+                    <input type="text" id="input-ss" placeholder="1 85 06 75 123 456 78" maxlength="15">
+                </div>
+                <div class="form-group">
+                    <label>Groupe sanguin</label>
+                    <select id="input-sanguin">
+                        <option value="">— Sélectionner —</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Informations professionnelles médecin -->
+            <div class="card" id="carte-medecin" style="display:none">
+                <div class="card-title">Informations professionnelles</div>
+                <div class="form-group">
+                    <label>Spécialité</label>
+                    <input type="text" id="input-specialite" placeholder="Généraliste, Cardiologue...">
+                </div>
+                <div class="form-group">
+                    <label>Cabinet</label>
+                    <input type="text" id="input-cabinet" placeholder="Cabinet médical du centre">
+                </div>
+                <div class="form-group">
+                    <label>Numéro d'ordre</label>
+                    <input type="text" id="input-ordre" placeholder="123456">
+                </div>
+                <div class="form-group">
+                    <label>Tarif de consultation (€)</label>
+                    <input type="number" id="input-tarif" placeholder="25" min="0" step="0.5">
+                </div>
+            </div>
+
+            <!-- Changer mot de passe -->
+            <div class="card">
+                <div class="card-title">Changer le mot de passe</div>
+                <div class="form-group">
+                    <label>Nouveau mot de passe</label>
+                    <input type="password" id="input-mdp" placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                    <label>Confirmer le mot de passe</label>
+                    <input type="password" id="input-mdp2" placeholder="••••••••">
+                </div>
+                <p style="font-size:12px;color:var(--muted)">Laisse vide si tu ne veux pas changer ton mot de passe.</p>
+            </div>
+
+        </div>
+
+        <!-- Barre de sauvegarde -->
+        <div class="save-bar">
+            <button class="btn-secondary" id="btn-annuler" onclick="annuler()">Annuler</button>
+            <button class="btn-primary" id="btn-sauvegarder" onclick="sauvegarder()">💾 Sauvegarder</button>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        // initNav charge la session et vérifie la connexion
+        const session = initNav('profil');
+
+        // Afficher la bonne carte selon le rôle
+        if (session.role === 'medecin') {
+            document.getElementById('carte-medicale').style.display = 'none';
+            document.getElementById('carte-medecin').style.display = 'block';
+        }
+
+        async function chargerProfil() {
+            document.getElementById('input-nom').value = session.nom || '';
+            document.getElementById('input-prenom').value = session.prenom || '';
+            document.getElementById('header-nom').textContent = `${session.prenom} ${session.nom}`;
+            document.getElementById('header-role').textContent = session.role === 'medecin' ? '👨‍⚕️ Médecin' : '🧑 Patient';
+            document.getElementById('profil-avatar').textContent = (session.prenom[0] + session.nom[0]).toUpperCase();
+
+            if (session.role === 'patient') {
+                const p = await api.get(`/patients/${session.patient_id}`);
+                if (p && !p.erreur) {
+                    document.getElementById('input-email').value = p.email || '';
+                    document.getElementById('input-telephone').value = p.telephone || '';
+                    document.getElementById('input-adresse').value = p.adresse || '';
+                    document.getElementById('input-ss').value = p.numero_ss || '';
+                    document.getElementById('input-sanguin').value = p.groupe_sanguin || '';
+                    document.getElementById('header-email').textContent = p.email || '';
+                    if (p.date_naissance)
+                        document.getElementById('input-naissance').value = p.date_naissance.split('T')[0];
+                }
+            } else {
+                const medecins = await api.get('/medecins');
+                const moi = medecins.find(m => m.id === session.medecin_id);
+                if (moi) {
+                    document.getElementById('input-email').value = moi.email || '';
+                    document.getElementById('input-telephone').value = moi.telephone || '';
+                    document.getElementById('input-specialite').value = moi.specialite || '';
+                    document.getElementById('input-cabinet').value = moi.cabinet || '';
+                    document.getElementById('input-tarif').value = moi.tarif_consultation || '';
+                    document.getElementById('header-email').textContent = moi.email || '';
+                }
+            }
+        }
+
+        function annuler() {
+            // Recharger les données originales depuis l'API
+            chargerProfil();
+            toast('Modifications annulées');
+        }
+
+        async function sauvegarder() {
+            const mdp = document.getElementById('input-mdp').value;
+            const mdp2 = document.getElementById('input-mdp2').value;
+
+            if (mdp && mdp !== mdp2) {
+                toast('Les mots de passe ne correspondent pas', 'error');
+                return;
+            }
+
+            // Désactiver les boutons pendant la sauvegarde
+            document.getElementById('btn-sauvegarder').disabled = true;
+            document.getElementById('btn-sauvegarder').textContent = 'Sauvegarde...';
+
+            try {
+                if (session.role === 'patient') {
+                    const res = await api.patch(`/patients/${session.patient_id}`, {
+                        date_naissance: document.getElementById('input-naissance').value || null,
+                        adresse: document.getElementById('input-adresse').value || null,
+                        numero_ss: document.getElementById('input-ss').value || null,
+                        groupe_sanguin: document.getElementById('input-sanguin').value || null,
+                    });
+                    if (res.erreur) throw new Error(res.erreur);
+                }
+
+                // Mettre à jour la session localStorage
+                const newSession = {
+                    ...session,
+                    nom: document.getElementById('input-nom').value,
+                    prenom: document.getElementById('input-prenom').value,
+                };
+                localStorage.setItem('goodoc_session', JSON.stringify(newSession));
+
+                // Mettre à jour l'affichage
+                document.getElementById('header-nom').textContent = `${newSession.prenom} ${newSession.nom}`;
+                document.getElementById('user-avatar').textContent = (newSession.prenom[0] + newSession.nom[0]).toUpperCase();
+
+                toast('Profil mis à jour avec succès !');
+            } catch (e) {
+                toast('Erreur lors de la sauvegarde : ' + e.message, 'error');
+            } finally {
+                document.getElementById('btn-sauvegarder').disabled = false;
+                document.getElementById('btn-sauvegarder').textContent = '💾 Sauvegarder';
+            }
+        }
+
+        chargerProfil();
+    </script>
+</body>
+
+</html>

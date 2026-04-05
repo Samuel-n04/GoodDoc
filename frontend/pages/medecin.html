@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GooDoc — Espace médecin</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .tab {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+    }
+
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .4);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 14px;
+      padding: 28px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .modal h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .tag-input {
+      display: flex;
+      gap: 8px;
+    }
+
+    .medicament-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .medicament-tag {
+      background: #eff6ff;
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .medicament-tag button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-brand">🩺 GooDoc</div>
+    <div class="navbar-nav">
+      <a href="medecin.html" class="nav-link active">Mon espace</a>
+    </div>
+    <div class="navbar-user">
+      <span id="user-name"></span>
+      <button class="btn-logout" onclick="window.location.href='../logout.php'">Déconnexion</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title" id="titre">Bonjour Dr. 👋</h1>
+
+    <!-- Stats -->
+    <div class="grid-4" style="margin-bottom:28px">
+      <div class="stat-card">
+        <div class="stat-value" id="nb-attente">—</div>
+        <div class="stat-label">RDV en attente</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="nb-aujourdhui">—</div>
+        <div class="stat-label">RDV aujourd'hui</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="nb-creneaux">—</div>
+        <div class="stat-label">Créneaux disponibles</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="nb-total">—</div>
+        <div class="stat-label">Total RDV</div>
+      </div>
+    </div>
+
+    <!-- Onglets -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('rdv')">Rendez-vous</button>
+      <button class="tab" onclick="switchTab('creneaux')">Mes créneaux</button>
+    </div>
+
+    <!-- Onglet RDV -->
+    <div class="tab-content active" id="tab-rdv">
+      <div class="card">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Patient</th>
+              <th>Motif</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-rdv">
+            <tr>
+              <td colspan="5" style="text-align:center;color:var(--muted)">Chargement...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Onglet Créneaux -->
+    <div class="tab-content" id="tab-creneaux">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+        <button class="btn-primary" onclick="ouvrirModalCreneau()">+ Ajouter un créneau</button>
+      </div>
+      <div class="card">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Heure début</th>
+              <th>Heure fin</th>
+              <th>Disponible</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-creneaux">
+            <tr>
+              <td colspan="4" style="text-align:center;color:var(--muted)">Chargement...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal ordonnance -->
+  <div class="modal-overlay" id="modal-ordo">
+    <div class="modal">
+      <h2>Rédiger une ordonnance</h2>
+      <input type="hidden" id="ordo-rdv-id">
+      <input type="hidden" id="ordo-dossier-id">
+      <div class="form-group">
+        <label>Ajouter un médicament</label>
+        <div class="tag-input">
+          <input type="text" id="input-medicament" placeholder="ex: Doliprane 1000mg">
+          <button class="btn-secondary" onclick="ajouterMedicament()">Ajouter</button>
+        </div>
+        <div class="medicament-list" id="medicament-list"></div>
+      </div>
+      <div class="form-group">
+        <label>Instructions</label>
+        <textarea id="input-instructions" rows="3" placeholder="1 comprimé matin et soir..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="fermerModals()">Annuler</button>
+        <button class="btn-primary" onclick="confirmerOrdonnance()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal créneau -->
+  <div class="modal-overlay" id="modal-creneau">
+    <div class="modal">
+      <h2>Ajouter un créneau</h2>
+      <div class="form-group">
+        <label>Heure de début</label>
+        <input type="time" id="input-debut">
+      </div>
+      <div class="form-group">
+        <label>Heure de fin</label>
+        <input type="time" id="input-fin">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="fermerModals()">Annuler</button>
+        <button class="btn-primary" onclick="confirmerCreneau()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    const session = JSON.parse(localStorage.getItem('goodoc_session') || '{}');
+    if (!session.user_id || session.role !== 'medecin') window.location.href = '../login.php';
+
+    document.getElementById('user-name').textContent = `Dr. ${session.prenom} ${session.nom}`;
+    document.getElementById('titre').textContent = `Bonjour, Dr. ${session.nom} 👋`;
+
+    const badges = {
+      EN_ATTENTE: 'badge-attente', CONFIRME: 'badge-confirme',
+      ANNULE: 'badge-annule', TERMINE: 'badge-termine'
+    };
+
+    let medicaments = [];
+
+    function switchTab(nom) {
+      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ['rdv', 'creneaux'][i] === nom));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(`tab-${nom}`).classList.add('active');
+    }
+
+    async function chargerRDV() {
+      const rdvs = await api.get(`/rdv/medecin/${session.medecin_id}`);
+      const tbody = document.getElementById('tbody-rdv');
+      const auj = new Date().toDateString();
+
+      document.getElementById('nb-attente').textContent = rdvs.filter(r => r.statut === 'EN_ATTENTE').length;
+      document.getElementById('nb-aujourdhui').textContent = rdvs.filter(r => new Date(r.date).toDateString() === auj).length;
+      document.getElementById('nb-total').textContent = rdvs.length;
+
+      if (!rdvs.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Aucun rendez-vous</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rdvs.map(r => `
+      <tr>
+        <td>${new Date(r.date).toLocaleDateString('fr-FR')}</td>
+        <td>${r.patient_prenom} ${r.patient_nom}</td>
+        <td>${r.motif || '—'}</td>
+        <td><span class="badge ${badges[r.statut]}">${r.statut}</span></td>
+        <td style="display:flex;gap:6px;flex-wrap:wrap">
+          ${r.statut === 'EN_ATTENTE' ? `
+            <button class="btn-primary btn-sm" onclick="valider(${r.id})">✓ Valider</button>
+            <button class="btn-danger btn-sm"  onclick="refuser(${r.id})">✗ Refuser</button>
+          ` : ''}
+          ${r.statut === 'CONFIRME' ? `
+            <button class="btn-primary btn-sm" onclick="demarrer(${r.id})">▶ Démarrer</button>
+            <button class="btn-secondary btn-sm" onclick="ouvrirOrdonnance(${r.id})">📋 Ordonnance</button>
+          ` : ''}
+        </td>
+      </tr>
+    `).join('');
+    }
+
+    async function chargerCreneaux() {
+      const creneaux = await api.get(`/medecins/${session.medecin_id}/creneaux/tous`);
+      const tbody = document.getElementById('tbody-creneaux');
+      document.getElementById('nb-creneaux').textContent = creneaux.filter(c => c.disponible).length;
+
+      if (!creneaux.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted)">Aucun créneau</td></tr>';
+        return;
+      }
+      tbody.innerHTML = creneaux.map(c => `
+      <tr>
+        <td>${c.heure_debut}</td>
+        <td>${c.heure_fin}</td>
+        <td><span class="badge ${c.disponible ? 'badge-confirme' : 'badge-annule'}">${c.disponible ? 'Disponible' : 'Bloqué'}</span></td>
+        <td>
+          <button class="btn-secondary btn-sm" onclick="toggleCreneau(${c.id}, ${c.disponible})">
+            ${c.disponible ? 'Bloquer' : 'Libérer'}
+          </button>
+        </td>
+      </tr>
+    `).join('');
+    }
+
+    async function valider(id) {
+      await api.patch(`/rdv/${id}/statut`, { statut: 'CONFIRME' });
+      // Créer la consultation vidéo automatiquement
+      await api.post('/consultation', { rendez_vous_id: id });
+      chargerRDV();
+    }
+
+    async function refuser(id) {
+      if (!confirm('Refuser ce rendez-vous ?')) return;
+      await api.patch(`/rdv/${id}/statut`, { statut: 'ANNULE' });
+      chargerRDV();
+    }
+
+    async function demarrer(rdvId) {
+      const c = await api.get(`/consultation/rdv/${rdvId}`);
+      if (c?.url_video) {
+        await api.patch(`/consultation/${c.id}/statut`, { statut: 'EN_COURS' });
+        window.open(c.url_video, '_blank');
+      } else {
+        alert('Aucune consultation vidéo associée.');
+      }
+    }
+
+    async function ouvrirOrdonnance(rdvId) {
+      document.getElementById('ordo-rdv-id').value = rdvId;
+      // Récupérer le dossier du patient lié au RDV
+      const rdvs = await api.get(`/rdv/medecin/${session.medecin_id}`);
+      const rdv = rdvs.find(r => r.id === parseInt(rdvId));
+      const doss = await api.get(`/dossier/${rdv.patient_id}`);
+      document.getElementById('ordo-dossier-id').value = doss.dossier.id;
+      medicaments = [];
+      document.getElementById('medicament-list').innerHTML = '';
+      document.getElementById('modal-ordo').classList.add('open');
+    }
+
+    function ajouterMedicament() {
+      const val = document.getElementById('input-medicament').value.trim();
+      if (!val) return;
+      medicaments.push(val);
+      document.getElementById('input-medicament').value = '';
+      const list = document.getElementById('medicament-list');
+      list.innerHTML = medicaments.map((m, i) => `
+      <span class="medicament-tag">${m}
+        <button onclick="retirerMedicament(${i})">×</button>
+      </span>
+    `).join('');
+    }
+
+    function retirerMedicament(i) {
+      medicaments.splice(i, 1);
+      document.getElementById('medicament-list').innerHTML = medicaments.map((m, j) => `
+      <span class="medicament-tag">${m}
+        <button onclick="retirerMedicament(${j})">×</button>
+      </span>
+    `).join('');
+    }
+
+    async function confirmerOrdonnance() {
+      await api.post('/dossier/ordonnance', {
+        dossier_id: parseInt(document.getElementById('ordo-dossier-id').value),
+        medecin_id: session.medecin_id,
+        rdv_id: parseInt(document.getElementById('ordo-rdv-id').value),
+        medicaments,
+        instructions: document.getElementById('input-instructions').value
+      });
+      fermerModals();
+      alert('Ordonnance enregistrée avec succès.');
+    }
+
+    function ouvrirModalCreneau() {
+      document.getElementById('modal-creneau').classList.add('open');
+    }
+
+    async function confirmerCreneau() {
+      const debut = document.getElementById('input-debut').value;
+      const fin = document.getElementById('input-fin').value;
+      if (!debut || !fin) return alert('Veuillez remplir les deux horaires.');
+      await api.post(`/medecins/${session.medecin_id}/creneaux`, {
+        heure_debut: debut, heure_fin: fin
+      });
+      fermerModals();
+      chargerCreneaux();
+    }
+
+    async function toggleCreneau(id, disponible) {
+      await api.patch(`/medecins/creneaux/${id}`, { disponible: !disponible });
+      chargerCreneaux();
+    }
+
+    function fermerModals() {
+      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+    }
+
+    chargerRDV();
+    chargerCreneaux();
+  </script>
+</body>
+
+</html>
