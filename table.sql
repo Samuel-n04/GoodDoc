@@ -58,7 +58,7 @@ CREATE TABLE creneau (
   heure_debut TIME NOT NULL,
   heure_fin   TIME NOT NULL,
   disponible  BOOLEAN DEFAULT TRUE,
-  date        DATE    -- NULL = créneau récurrent, valeur = créneau ponctuel
+  date        DATE NOT NULL
 );
 
 -- Rendez-vous
