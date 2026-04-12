@@ -147,6 +147,7 @@
     <div class="tabs">
       <button class="tab active" onclick="switchTab('rdv')">Rendez-vous</button>
       <button class="tab" onclick="switchTab('creneaux')">Mes créneaux</button>
+      <button class="tab" onclick="switchTab('ordonnances')">Ordonnances</button>
     </div>
 
     <!-- Onglet RDV -->
@@ -156,6 +157,7 @@
           <thead>
             <tr>
               <th>Date</th>
+              <th>Heure</th>
               <th>Patient</th>
               <th>Motif</th>
               <th>Statut</th>
@@ -164,7 +166,7 @@
           </thead>
           <tbody id="tbody-rdv">
             <tr>
-              <td colspan="5" style="text-align:center;color:var(--muted)">Chargement...</td>
+              <td colspan="6" style="text-align:center;color:var(--muted)">Chargement...</td>
             </tr>
           </tbody>
         </table>
@@ -180,6 +182,7 @@
         <table class="table">
           <thead>
             <tr>
+              <th>Date</th>
               <th>Heure début</th>
               <th>Heure fin</th>
               <th>Disponible</th>
@@ -188,7 +191,29 @@
           </thead>
           <tbody id="tbody-creneaux">
             <tr>
-              <td colspan="4" style="text-align:center;color:var(--muted)">Chargement...</td>
+              <td colspan="5" style="text-align:center;color:var(--muted)">Chargement...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Onglet Ordonnances -->
+    <div class="tab-content" id="tab-ordonnances">
+      <div class="card">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Patient</th>
+              <th>Médicaments</th>
+              <th>Instructions</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-ordonnances">
+            <tr>
+              <td colspan="5" style="text-align:center;color:var(--muted)">Chargement...</td>
             </tr>
           </tbody>
         </table>
@@ -226,6 +251,10 @@
     <div class="modal">
       <h2>Ajouter un créneau</h2>
       <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="input-date-creneau">
+      </div>
+      <div class="form-group">
         <label>Heure de début</label>
         <input type="time" id="input-debut">
       </div>
@@ -256,14 +285,19 @@
     let medicaments = [];
 
     function switchTab(nom) {
-      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ['rdv', 'creneaux'][i] === nom));
+      const tabs = ['rdv', 'creneaux', 'ordonnances'];
+      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', tabs[i] === nom));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.getElementById(`tab-${nom}`).classList.add('active');
+      if (nom === 'creneaux') chargerCreneaux();
+      if (nom === 'ordonnances') chargerOrdonnances();
     }
 
     async function chargerRDV() {
-      const rdvs = await api.get(`/rdv/medecin/${session.medecin_id}`);
       const tbody = document.getElementById('tbody-rdv');
+      try {
+      const rdvs = await api.get(`/rdv/medecin/${session.medecin_id}`);
+      if (!Array.isArray(rdvs)) throw new Error('Réponse invalide');
       const auj = new Date().toDateString();
 
       document.getElementById('nb-attente').textContent = rdvs.filter(r => r.statut === 'EN_ATTENTE').length;
@@ -271,12 +305,13 @@
       document.getElementById('nb-total').textContent = rdvs.length;
 
       if (!rdvs.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Aucun rendez-vous</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Aucun rendez-vous</td></tr>';
         return;
       }
       tbody.innerHTML = rdvs.map(r => `
       <tr>
         <td>${new Date(r.date).toLocaleDateString('fr-FR')}</td>
+        <td>${r.heure_debut ? r.heure_debut.slice(0,5) + ' — ' + r.heure_fin.slice(0,5) : '—'}</td>
         <td>${r.patient_prenom} ${r.patient_nom}</td>
         <td>${r.motif || '—'}</td>
         <td><span class="badge ${badges[r.statut]}">${r.statut}</span></td>
@@ -287,16 +322,21 @@
           ` : ''}
           ${r.statut === 'CONFIRME' ? `
             <button class="btn-primary btn-sm" onclick="demarrer(${r.id})">▶ Démarrer</button>
-            <button class="btn-secondary btn-sm" onclick="ouvrirOrdonnance(${r.id})">📋 Ordonnance</button>
+            <button class="btn-secondary btn-sm" onclick="ouvrirOrdonnance(${r.id}, ${r.patient_id})">📋 Ordonnance</button>
           ` : ''}
         </td>
       </tr>
     `).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Erreur de chargement</td></tr>';
+      }
     }
 
     async function chargerCreneaux() {
-      const creneaux = await api.get(`/medecins/${session.medecin_id}/creneaux/tous`);
       const tbody = document.getElementById('tbody-creneaux');
+      try {
+      const creneaux = await api.get(`/medecins/${session.medecin_id}/creneaux/tous`);
+      if (!Array.isArray(creneaux)) throw new Error('Réponse invalide');
       document.getElementById('nb-creneaux').textContent = creneaux.filter(c => c.disponible).length;
 
       if (!creneaux.length) {
@@ -305,6 +345,7 @@
       }
       tbody.innerHTML = creneaux.map(c => `
       <tr>
+        <td>${new Date(c.date).toLocaleDateString('fr-FR')}</td>
         <td>${c.heure_debut}</td>
         <td>${c.heure_fin}</td>
         <td><span class="badge ${c.disponible ? 'badge-confirme' : 'badge-annule'}">${c.disponible ? 'Disponible' : 'Bloqué'}</span></td>
@@ -315,6 +356,9 @@
         </td>
       </tr>
     `).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted)">Erreur de chargement</td></tr>';
+      }
     }
 
     async function valider(id) {
@@ -340,12 +384,13 @@
       }
     }
 
-    async function ouvrirOrdonnance(rdvId) {
+    async function ouvrirOrdonnance(rdvId, patientId) {
       document.getElementById('ordo-rdv-id').value = rdvId;
-      // Récupérer le dossier du patient lié au RDV
-      const rdvs = await api.get(`/rdv/medecin/${session.medecin_id}`);
-      const rdv = rdvs.find(r => r.id === parseInt(rdvId));
-      const doss = await api.get(`/dossier/${rdv.patient_id}`);
+      const doss = await api.get(`/dossier/${patientId}`);
+      if (!doss.dossier) {
+        alert('Ce patient n\'a pas encore de dossier médical.');
+        return;
+      }
       document.getElementById('ordo-dossier-id').value = doss.dossier.id;
       medicaments = [];
       document.getElementById('medicament-list').innerHTML = '';
@@ -375,6 +420,7 @@
     }
 
     async function confirmerOrdonnance() {
+      if (!medicaments.length) return alert('Veuillez ajouter au moins un médicament.');
       await api.post('/dossier/ordonnance', {
         dossier_id: parseInt(document.getElementById('ordo-dossier-id').value),
         medecin_id: session.medecin_id,
@@ -387,15 +433,23 @@
     }
 
     function ouvrirModalCreneau() {
+      document.getElementById('input-date-creneau').value = '';
+      document.getElementById('input-debut').value = '';
+      document.getElementById('input-fin').value = '';
       document.getElementById('modal-creneau').classList.add('open');
     }
 
     async function confirmerCreneau() {
       const debut = document.getElementById('input-debut').value;
-      const fin = document.getElementById('input-fin').value;
-      if (!debut || !fin) return alert('Veuillez remplir les deux horaires.');
+      const fin   = document.getElementById('input-fin').value;
+      const date  = document.getElementById('input-date-creneau').value;
+
+      if (!date || !debut || !fin) return alert('Veuillez remplir tous les champs.');
+
       await api.post(`/medecins/${session.medecin_id}/creneaux`, {
-        heure_debut: debut, heure_fin: fin
+        heure_debut: debut,
+        heure_fin: fin,
+        date
       });
       fermerModals();
       chargerCreneaux();
@@ -406,12 +460,41 @@
       chargerCreneaux();
     }
 
+    async function chargerOrdonnances() {
+      const tbody = document.getElementById('tbody-ordonnances');
+      try {
+        const ordonnances = await api.get(`/dossier/medecin/${session.medecin_id}/ordonnances`);
+        if (!Array.isArray(ordonnances) || !ordonnances.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Aucune ordonnance</td></tr>';
+          return;
+        }
+        tbody.innerHTML = ordonnances.map(o => `
+          <tr>
+            <td>${new Date(o.date_emission).toLocaleDateString('fr-FR')}</td>
+            <td>${o.patient_prenom} ${o.patient_nom}</td>
+            <td>${(o.medicaments || []).join(', ')}</td>
+            <td>${o.instructions || '—'}</td>
+            <td><button class="btn-danger btn-sm" onclick="supprimerOrdonnance(${o.id})">Supprimer</button></td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Erreur de chargement</td></tr>';
+      }
+    }
+
+    async function supprimerOrdonnance(id) {
+      if (!confirm('Supprimer cette ordonnance ?')) return;
+      try { await api.delete(`/dossier/ordonnance/${id}`); } catch (_) {}
+      chargerOrdonnances();
+    }
+
     function fermerModals() {
       document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
     }
 
     chargerRDV();
     chargerCreneaux();
+    setInterval(chargerRDV, 30000);
   </script>
 </body>
 

@@ -86,14 +86,15 @@
 
     // Charger les RDV
     async function chargerRDV() {
+      const tbody = document.getElementById('tbody-rdv');
+      try {
       const endpoint = session.role === 'patient'
         ? `/rdv/patient/${session.patient_id}`
         : `/rdv/medecin/${session.medecin_id}`;
 
       const rdvs = await api.get(endpoint);
-      const tbody = document.getElementById('tbody-rdv');
 
-      if (!rdvs.length) {
+      if (!Array.isArray(rdvs) || !rdvs.length) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Aucun rendez-vous</td></tr>';
         return;
       }
@@ -123,19 +124,27 @@
       // Stats
       document.getElementById('nb-rdv').textContent = rdvs.filter(r => r.statut !== 'ANNULE' && r.statut !== 'TERMINE').length;
       document.getElementById('nb-confirme').textContent = rdvs.filter(r => r.statut === 'CONFIRME').length;
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Erreur de chargement</td></tr>';
+      }
     }
 
     async function chargerStats() {
-      // Notifications non lues
-      const notifs = await api.get(`/notifications/${session.user_id}`);
-      document.getElementById('nb-notifs').textContent = notifs.filter(n => !n.lue).length;
+      try {
+        // Notifications non lues
+        const notifs = await api.get(`/notifications/${session.user_id}`);
+        document.getElementById('nb-notifs').textContent = Array.isArray(notifs)
+          ? notifs.filter(n => !n.lue).length : '—';
 
-      // Ordonnances (patient uniquement)
-      if (session.role === 'patient') {
-        const dossier = await api.get(`/dossier/${session.patient_id}`);
-        document.getElementById('nb-ordonnances').textContent = dossier.ordonnances?.length ?? 0;
-      } else {
-        document.getElementById('nb-ordonnances').parentElement.style.display = 'none';
+        // Ordonnances (patient uniquement)
+        if (session.role === 'patient') {
+          const dossier = await api.get(`/dossier/${session.patient_id}`);
+          document.getElementById('nb-ordonnances').textContent = dossier.ordonnances?.length ?? 0;
+        } else {
+          document.getElementById('nb-ordonnances').parentElement.style.display = 'none';
+        }
+      } catch (e) {
+        document.getElementById('nb-notifs').textContent = '—';
       }
     }
 
@@ -160,6 +169,7 @@
 
     chargerRDV();
     chargerStats();
+    setInterval(() => { chargerRDV(); chargerStats(); }, 30000);
   </script>
 </body>
 

@@ -49,6 +49,10 @@ router.post('/token', async (req, res) => {
 // POST /api/auth/mint — Génère un JWT pour un user_id déjà authentifié par PHP
 // Appelé uniquement depuis le backend PHP (pas exposé au navigateur)
 router.post('/mint', async (req, res) => {
+  const secret = req.headers['x-internal-secret'];
+  if (!secret || secret !== process.env.INTERNAL_SECRET) {
+    return res.status(403).json({ erreur: 'Accès refusé' });
+  }
   try {
     const { user_id } = req.body;
     if (!user_id) return res.status(400).json({ erreur: 'user_id requis' });

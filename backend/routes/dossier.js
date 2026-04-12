@@ -55,6 +55,31 @@ router.get('/ordonnance/:id/pdf', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ erreur: e.message }); }
 });
 
+// GET — Ordonnances émises par un médecin
+router.get('/medecin/:id/ordonnances', auth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT o.*, up.nom AS patient_nom, up.prenom AS patient_prenom
+       FROM ordonnance o
+       JOIN dossier_medical d ON o.dossier_id = d.id
+       JOIN patient p ON d.patient_id = p.id
+       JOIN utilisateur up ON p.utilisateur_id = up.id
+       WHERE o.medecin_id=$1
+       ORDER BY o.date_emission DESC`,
+      [req.params.id]
+    );
+    res.json(r.rows);
+  } catch (e) { res.status(500).json({ erreur: e.message }); }
+});
+
+// DELETE — Supprimer une ordonnance
+router.delete('/ordonnance/:id', auth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM ordonnance WHERE id=$1', [req.params.id]);
+    res.json({ message: 'Ordonnance supprimée' });
+  } catch (e) { res.status(500).json({ erreur: e.message }); }
+});
+
 // GET — Dossier médical d'un patient  ← en dernier car route générique
 router.get('/:patientId', auth, async (req, res) => {
   try {
@@ -62,13 +87,16 @@ router.get('/:patientId', auth, async (req, res) => {
     const dossier = await pool.query(
       'SELECT * FROM dossier_medical WHERE patient_id=$1', [patientId]
     );
+    if (!dossier.rows[0]) {
+      return res.json({ dossier: null, ordonnances: [] });
+    }
     const ordonnances = await pool.query(
       `SELECT o.*, u.nom AS medecin_nom, u.prenom AS medecin_prenom
        FROM ordonnance o
        JOIN medecin m ON o.medecin_id = m.id
        JOIN utilisateur u ON m.utilisateur_id = u.id
        WHERE o.dossier_id=$1 ORDER BY o.date_emission DESC`,
-      [dossier.rows[0]?.id]
+      [dossier.rows[0].id]
     );
     res.json({ dossier: dossier.rows[0], ordonnances: ordonnances.rows });
   } catch (e) { res.status(500).json({ erreur: e.message }); }

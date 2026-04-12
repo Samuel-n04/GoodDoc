@@ -20,11 +20,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($user && password_verify($mdp, $user['mot_de_passe'])) {
       // Appeler l'API Node.js pour obtenir le JWT
-      $ch = curl_init('http://localhost:3000/api/auth/token');
+      $ch = curl_init('http://localhost:3000/api/auth/mint');
       curl_setopt($ch, CURLOPT_POST, true);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['email' => $email, 'mot_de_passe' => $mdp]));
-      curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['user_id' => $user['id']]));
+      curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'X-Internal-Secret: ' . INTERNAL_SECRET
+      ]);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 5);
       $resp  = curl_exec($ch);
       curl_close($ch);
       $data  = json_decode($resp, true);
@@ -38,24 +42,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $_SESSION['medecin_id'] = $user['medecin_id'];
       $_SESSION['jwt']        = $token;
 
-      // Stocker token + session dans localStorage via JS puis rediriger
-      $session_js = json_encode([
-        'user_id'    => $user['id'],
-        'nom'        => $user['nom'],
-        'prenom'     => $user['prenom'],
-        'role'       => $user['role'],
-        'patient_id' => $user['patient_id'],
-        'medecin_id' => $user['medecin_id'],
-      ]);
-      $redirect = $user['role'] === 'medecin' ? 'pages/medecin.html' : 'pages/dashboard.html';
-      echo "<!DOCTYPE html><html><head><title>Connexion...</title></head><body>
-        <script>
-          localStorage.setItem('goodoc_token', " . json_encode($token) . ");
-          localStorage.setItem('goodoc_session', " . json_encode($session_js) . ");
-          window.location.href = '{$redirect}';
-        </script>
-      </body></html>";
-      exit;
+      if (!$token) {
+        $erreur = 'Serveur indisponible, impossible de générer la session. Assurez-vous que le backend est démarré.';
+      } else {
+        // Stocker token + session dans localStorage via JS puis rediriger
+        $session_js = json_encode([
+          'user_id'    => $user['id'],
+          'nom'        => $user['nom'],
+          'prenom'     => $user['prenom'],
+          'role'       => $user['role'],
+          'patient_id' => $user['patient_id'],
+          'medecin_id' => $user['medecin_id'],
+        ]);
+        $redirect = $user['role'] === 'medecin' ? 'pages/medecin.html' : 'pages/dashboard.html';
+        echo "<!DOCTYPE html><html><head><title>Connexion...</title></head><body>
+          <script>
+            localStorage.setItem('goodoc_token', " . json_encode($token) . ");
+            localStorage.setItem('goodoc_session', " . json_encode($session_js) . ");
+            window.location.href = '{$redirect}';
+          </script>
+        </body></html>";
+        exit;
+      }
     } else {
       $erreur = 'Email ou mot de passe incorrect.';
     }

@@ -57,7 +57,8 @@ CREATE TABLE creneau (
   medecin_id  INT NOT NULL REFERENCES medecin(id) ON DELETE CASCADE,
   heure_debut TIME NOT NULL,
   heure_fin   TIME NOT NULL,
-  disponible  BOOLEAN DEFAULT TRUE
+  disponible  BOOLEAN DEFAULT TRUE,
+  date        DATE    -- NULL = créneau récurrent, valeur = créneau ponctuel
 );
 
 -- Rendez-vous

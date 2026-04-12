@@ -17,10 +17,13 @@ router.get('/', async (req, res) => {
 });
 
 // GET — Créneaux disponibles d'un médecin (pour les patients)
+// Retourne les créneaux récurrents + les créneaux ponctuels à venir
 router.get('/:id/creneaux', async (req, res) => {
   try {
     const r = await pool.query(
-      'SELECT * FROM creneau WHERE medecin_id=$1 AND disponible=true ORDER BY heure_debut',
+      `SELECT * FROM creneau
+       WHERE medecin_id=$1 AND disponible=true AND date >= CURRENT_DATE
+       ORDER BY date, heure_debut`,
       [req.params.id]
     );
     res.json(r.rows);
@@ -31,20 +34,21 @@ router.get('/:id/creneaux', async (req, res) => {
 router.get('/:id/creneaux/tous', auth, async (req, res) => {
   try {
     const r = await pool.query(
-      'SELECT * FROM creneau WHERE medecin_id=$1 ORDER BY heure_debut',
+      `SELECT * FROM creneau WHERE medecin_id=$1
+       ORDER BY date, heure_debut`,
       [req.params.id]
     );
     res.json(r.rows);
   } catch (e) { res.status(500).json({ erreur: e.message }); }
 });
 
-// POST — Ajouter un créneau
+// POST — Ajouter un créneau (récurrent ou ponctuel)
 router.post('/:id/creneaux', auth, async (req, res) => {
   try {
-    const { heure_debut, heure_fin } = req.body;
+    const { heure_debut, heure_fin, date } = req.body;
     const r = await pool.query(
-      'INSERT INTO creneau (medecin_id, heure_debut, heure_fin) VALUES ($1,$2,$3) RETURNING *',
-      [req.params.id, heure_debut, heure_fin]
+      'INSERT INTO creneau (medecin_id, heure_debut, heure_fin, date) VALUES ($1,$2,$3,$4) RETURNING *',
+      [req.params.id, heure_debut, heure_fin, date || null]
     );
     res.status(201).json(r.rows[0]);
   } catch (e) { res.status(500).json({ erreur: e.message }); }
