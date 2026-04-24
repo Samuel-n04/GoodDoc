@@ -31,3 +31,15 @@ desktop.ini
 
 
 CLAUDE.md
+
+# ── Cache outils ─────────────────────────────────────────────
+.php-cs-fixer.cache
+.php-cs-fixer.dist.cache
+
+# ── Fichiers HTML générés (exports de diagrammes) ────────────
+uml_*.html
+architecture_*.html
+
+# ── PDFs temporaires à la racine ─────────────────────────────
+Architecture.pdf
+Rapport_Final.pdf
